@@ -450,5 +450,43 @@ module.exports = function(config) {
     return ret.getAssignments(this.id, options, callback);
   };
 
+  /*
+   * Extends a Hit 
+   *
+   * @param {hitId} the Hit id (string)
+   * @param {options.maxAssignmentsIncrement} The number of assignments by which to increment the MaxAssignments parameter of the HIT.
+   * @param {options.expirationIncrementInSeconds} The amount of time, in seconds, by which to extend the expiration date. If the HIT has not yet expired, this amount is added to the HIT's expiration date. If the HIT has expired, the new expiration date is the current time plus this value. 
+   * @param {callback} function with signature (error)
+   * 
+   */
+  ret.extend = function extend(hitId, options, callback) {
+    var inOptions = {};
+    inOptions.HITId = hitId;
+    if (options.maxAssignmentsIncrement) inOptions.MaxAssignmentsIncrement = options.maxAssignmentsIncrement;
+    if (options.expirationIncrementInSeconds) inOptions.ExpirationIncrementInSeconds = options.expirationIncrementInSeconds
+    
+    request('AWSMechanicalTurkRequester', 'ExtendHIT', 'POST', inOptions, function(err, response) {
+      if (err) { return callback(err); } 
+      if (! Assignment.prototype.nodeExists(['ExtendHITResult', 'Request', 'IsValid'], response)) { callback([new Error('No "ExtendHITResult > Request > IsValid" node on the response')]); return; }
+      if (response.ExtendHITResult.Request.IsValid.toLowerCase() != 'true') {
+        return callback([new Error('Response says ExtendHITResult request is invalid: ' + JSON.stringify(response.ExtendHITResult.Request.Errors))]);
+      }
+      callback(null);
+    });
+  }
+
+
+  /*
+   * Extends the Hit 
+   *
+   * @param {options.maxAssignmentsIncrement} The number of assignments by which to increment the MaxAssignments parameter of the HIT.
+   * @param {options.expirationIncrementInSeconds} The amount of time, in seconds, by which to extend the expiration date. If the HIT has not yet expired, this amount is added to the HIT's expiration date. If the HIT has expired, the new expiration date is the current time plus this value. 
+   * @param {callback} function with signature (error)
+   * 
+   */
+  Hit.prototype.extend = function(options, callback) {
+    return ret.extend(this.id, options, callback);
+  };
+
   return ret;
 };
