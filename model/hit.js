@@ -484,7 +484,7 @@ module.exports = function(config) {
    * @param {callback} function with signature (error)
    * 
    */
-  Hit.prototype.extend = function(options, callback) {
+  HIT.prototype.extend = function(options, callback) {
     return ret.extend(this.id, options, callback);
   };
 
